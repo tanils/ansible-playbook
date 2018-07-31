@@ -1,0 +1,21 @@
+---
+- name: install apache and php modules
+  yum: name={{ item }} state=present
+  with_items:
+  - httpd
+  - php
+  - php-mysql
+  - git
+  - libsemanage-python
+ 
+- name: insert iptables rules for httpd
+  lineinfile: dest=/etc/sysconfig/iptables create=yes state=present regexp="{{ httpd_port }}" insertafter="^:OUTPUT " line="-A INPUT -p tcp --dport {{httpd_port}} -j ACCEPT"
+  notify: restart iptables
+  
+  
+- name: httpd service create
+  service: name:httpd state=started enabled=yes
+  
+- name: Configure SELinux to allow httpd to conncet to remote database
+  seboolean: name:httpd_can_network_connect_db state=true presistent=yes
+  when: sestatus.rc != 0
