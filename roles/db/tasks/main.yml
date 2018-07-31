@@ -1,0 +1,31 @@
+---
+
+- name: Install Mysql Package
+  yum: name={{ item }} state=installed
+    - mysql-server
+    - MySQL-python
+    - libselinux-python 
+    - libsemange-python
+- name: Configure Selinux to start mysql on any port
+  seboolean: name=mysql_connect_any state=true presistent=yes
+  when: status.rc !=0
+  
+- name: Create Mysql configuration file
+  template: src=my.cnf.j2 dst=/etc/my.cnf
+  notify:
+    - restart mysql
+    
+- name: Start the mysql service
+  service: name=mysql state=started enabled=yes
+  
+- name: insert iptables rules for the mysql software
+  lineinfile: dest=/etc/sysconfig/iptables state=present regex="{{ mysql_port}}""insertafter="^:OUTPUT " line="A INPUT -P tcp --dport {{mysql }} "
+  
+  notify: restart iptables
+  
+- name: Create Application Database
+  mysql_db: name={{ dname }} state=present
+ 
+- name: Create Appilcation Db user
+  mysql_user: name={{ dbuser }} password={{ upassword }} priv=*.*:ALL host='%' state=present
+  
