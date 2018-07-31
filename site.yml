@@ -1,0 +1,20 @@
+---
+- name: apply this to comon config (all nodes)
+   hosts: all
+   remote_user: root
+   roles:
+     - common
+     
+- name: for the webserver tier
+   hosts: webservers
+   remote_user: root
+   roles:
+     - web
+     
+- name: Mysql Layers Definiation
+  hosts: dbservers
+  remote_user: root
+  
+  roles:
+     - db
+ 
